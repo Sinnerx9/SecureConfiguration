@@ -1,25 +1,34 @@
 ﻿using HarmonyLib;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.FileProviders;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Text;
+using static System.Net.Mime.MediaTypeNames;
+
 
 namespace DigitalLogic
 {
 
-    public static class SecureConfiguration
+    public static class SecureWebApplication
     {
 
         private static Func<string, string>? OnLoad;
-
-        public static void UseSecureConfiguration(string id, Func<string, string> OnLoadFunc)
+        /// <summary>
+        /// Customized version of the "CreateBuilder" function that allows using an encrypted appsettings.json.
+        /// </summary>
+        /// <param name="args">The command-line arguments for your ASP.NET application.</param>
+        /// <param name="decryptionFunc">A function that decrypts your appsettings.json file.</param>
+        /// <returns>The configured WebApplication instance.</returns>
+        public static WebApplicationBuilder CreateBuilder(string[] args, Func<string, string> decryptionFunc)
         {
-            Harmony harmony = new Harmony(id);
-            SecureConfiguration.OnLoad = OnLoadFunc;
+            Harmony harmony = new Harmony(Assembly.GetEntryAssembly()?.GetName().Name);
+            SecureWebApplication.OnLoad = decryptionFunc;
             MethodInfo originalMethod = AccessTools.Method(typeof(FileConfigurationProvider), "Load", new Type[] { typeof(bool) });
-            MethodInfo prefixMethod = AccessTools.Method(typeof(SecureConfiguration), "Load");
+            MethodInfo prefixMethod = AccessTools.Method(typeof(SecureWebApplication), "Load");
             harmony.Patch(originalMethod, new HarmonyMethod(prefixMethod));
+            return WebApplication.CreateBuilder(args);
         }
         private static bool Load(FileConfigurationProvider __instance, bool reload)
         {
