@@ -18,13 +18,13 @@ using DigitalLogic;
 ```
 2 - Use secure configuration:
 ```csharp
-SecureConfiguration.UseSecureConfiguration("DigitalLogic", SecureSettings_OnLoad);
+var builder = SecureWebApplication.CreateBuilder(args, decryptionFunc);
 ```
 This line of code calls the UseSecureConfiguration method from the SecureConfiguration class, passing the arguments `DigitalLogic` (presumably as the configuration name) and `SecureSettings_OnLoad` (presumably as a callback method to handle the secure settings).
 
 3 - Define the SecureSettings_OnLoad method:
 ```csharp
-string SecureSettings_OnLoad(string appsettings)
+string decryptionFunc(string appsettings)
 {
     var data = Decrypt(
         Convert.FromBase64String(appsettings),
